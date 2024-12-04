@@ -16,20 +16,34 @@ def preprocess_file(file_path, original_separator='   ', new_separator=','):
 # main()
 def main ():
     preprocess_file("inputs/day-1/day-1-input-data")
-    total_distance = 0
     file_path = "inputs/day-1/day-1-input-data-processed"
     # load data
     df = pl.scan_csv(file_path, separator=",", encoding="utf8", has_header=False).collect()
     # label columns
-    df.columns = ["col1", "col2"]
+    df.columns = ["left", "right"]
     # sort
-    col1_series = df.get_column("col1").sort()
-    col2_series = df.get_column("col2").sort()
+    left_series = df.get_column("left").sort()
+    right_series = df.get_column("right").sort()
     # remove dataframe reference
     df = None
-    # compute the differece sum
-    total_distance = sum(abs(d1 - d2) for d1, d2 in zip(col1_series, col2_series))
-    print(total_distance)
+    # compute the differece sum # part 1
+    total_distance = sum(abs(d1 - d2) for d1, d2 in zip(left_series, right_series))
+    print("total distance is: ", total_distance)
+    # part 2
+    matching_value_check = left_series.is_in(right_series)
+    # new df to record the count 
+    df = pl.DataFrame({
+        "value": left_series,
+        "matching_value_check": matching_value_check
+    })
+
+    # group by value and sum the boolean values to get the counts occurrences
+    count = df.filter(df["matching_value_check"]).group_by("value").count()
+    print(count)
+    #print(left_series[15])
+    # for n in matching_values:
+    #     print(n)
+    #print(matching_values)
 
 if __name__ == "__main__":
     main()
